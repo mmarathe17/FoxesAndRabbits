@@ -196,4 +196,9 @@ public class Fox implements Serializable {
 	public void setFoodLevel(int fl) {
 		this.foodLevel = fl;
 	}
+
+	public void setEaten()
+	{
+		alive = false;
+	}
 }

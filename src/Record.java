@@ -16,14 +16,16 @@ import java.util.List;
 public class Record implements Serializable{
     private ArrayList<Rabbit> rabbits;
     private ArrayList<Fox> foxes;
+    private ArrayList<Bear> bears;
     private int steps;
     
     // The current state of the field.
     private Field field;
     
-	public Record(ArrayList<Rabbit> r, ArrayList<Fox> f, Field field, int step){
+	public Record(ArrayList<Rabbit> r, ArrayList<Fox> f, ArrayList<Bear> b, Field field, int step){
 		setRabbits(r);
 		setFoxes(f);
+		setBears(b);
 		setField(field);
 		setSteps(step);
 	}
@@ -39,6 +41,13 @@ public class Record implements Serializable{
 	public void setFoxes(ArrayList<Fox> foxes) {
 		this.foxes = foxes;
 	}
+	public ArrayList<Bear> getBears() {
+		return bears;
+	}
+	public void setBears(ArrayList<Bear> bears) {
+		this.bears = bears;
+	}
+
 	public Field getField() {
 		return field;
 	}

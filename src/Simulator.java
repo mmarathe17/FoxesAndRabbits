@@ -31,10 +31,13 @@ public class Simulator {
 	// The probability that a rabbit will be created in any given grid position.
 	private static final double RABBIT_CREATION_PROBABILITY = 0.08;
 
+	private static final double BEAR_CREATION_PROBABILITY = 0.1;
+
 	// Lists of animals in the field. Separate lists are kept for ease of
 	// iteration.
 	private ArrayList<Rabbit> rabbitList;
 	private ArrayList<Fox> foxList;
+	private ArrayList<Bear> bearList;
 
 	// The current state of the field.
 	private Field field;
@@ -82,6 +85,7 @@ public class Simulator {
 
 		rabbitList = new ArrayList<Rabbit>();
 		foxList = new ArrayList<Fox>();
+		bearList = new ArrayList<Bear>();
 		field = new Field(width, height);
 		updatedField = new Field(width, height);
 		stats = new FieldStats();
@@ -98,6 +102,7 @@ public class Simulator {
 		view = new FieldDisplay(p, this.field, x, y, display_width, display_height);
 		view.setColor(Rabbit.class, p.color(155, 155, 155));
 		view.setColor(Fox.class, p.color(200, 0, 255));
+		view.setColor(Bear.class, p.color(0, 255, 0));
 		
 		graph = new Graph(p, 100, p.height - 30, p.width - 50, p.height - 110, 0,
 				0, 500, field.getHeight() * field.getWidth());
@@ -107,6 +112,7 @@ public class Simulator {
 		graph.ylabel = "Pop.\t\t";
 		graph.setColor(Rabbit.class, p.color(155, 155, 155));
 		graph.setColor(Fox.class, p.color(200, 0, 255));
+		graph.setColor(Bear.class, p.color(0, 255, 0));
 	}
 
 	public void setGUI(PApplet p) {
@@ -170,8 +176,21 @@ public class Simulator {
 			}
 		}
 
+
+		ArrayList<Bear> babyBearStorage = new ArrayList<Bear>();
+
+		for (int i = 0; i < bearList.size(); i++) {
+			Bear bear = bearList.get(i);
+			bear.hunt(field, updatedField, babyBearStorage);
+			if (!bear.isAlive()) {
+				bearList.remove(i);
+				i--;
+			}
+		}
+
 		// Add new born foxList to the main list of foxList.
 		foxList.addAll(babyFoxStorage);
+		bearList.addAll(babyBearStorage);
 
 		// Swap the field and updatedField at the end of the step.
 		Field temp = field;
@@ -197,6 +216,7 @@ public class Simulator {
 		step = 0;
 		rabbitList.clear();
 		foxList.clear();
+		bearList.clear();
 		field.clear();
 		updatedField.clear();
 		initializeBoard(field);
@@ -229,12 +249,18 @@ public class Simulator {
 					rabbit.setLocation(col, row);
 					rabbitList.add(rabbit);
 
-					field.put(rabbit, col, row);
+				} else if (rand.nextDouble() <= BEAR_CREATION_PROBABILITY) {
+					Bear bear = new Bear(true);
+					bear.setLocation(col, row);
+					bearList.add(bear);
+
+					field.put(bear, col, row);
 				}
 			}
 		}
 		Collections.shuffle(rabbitList);
 		Collections.shuffle(foxList);
+		Collections.shuffle(bearList);
 	}
 
 	private boolean isViable() {
@@ -258,7 +284,7 @@ public class Simulator {
 
 	public void writeToFile(String writefile) {
 		try {
-			Record r = new Record(rabbitList, foxList, this.field, this.step);
+			Record r = new Record(rabbitList, foxList, bearList, this.field, this.step);
 			FileOutputStream outStream = new FileOutputStream(writefile);
 			ObjectOutputStream objectOutputFile = new ObjectOutputStream(outStream);
 			objectOutputFile.writeObject(r);
@@ -275,6 +301,8 @@ public class Simulator {
 			Record r = (Record) objectInputFile.readObject();
 			setFoxList(r.getFoxes());
 			setRabbitList(r.getRabbits());
+			setBearList(r.getBears());
+
 			setField(r.getField());
 			setStep(r.getSteps());
 			objectInputFile.close();
@@ -316,6 +344,11 @@ public class Simulator {
 		foxList = newFoxesList;
 	}
 
+
+	private void setBearList(ArrayList<Bear> newBearsList) {
+		bearList = newBearsList;
+	}
+
 	// Perform an action when the mouse was clicked.
 	// parameters are the x, y screen coordinates the user clicked on.
 	// Note: you probably want to modify handleMouseClick(Location) which
@@ -333,6 +366,8 @@ public class Simulator {
 						rabbitList.remove((Rabbit) animal);
 					if (animal instanceof Fox)
 						foxList.remove((Fox) animal);
+					if (animal instanceof Bear)
+						bearList.remove((Bear) animal);
 					field.put(null, locToCheck);
 					updatedField.put(null, locToCheck);
 				}
